@@ -1,1 +1,6 @@
 Pipfile
+
+# Ignore Python cache directories
+__pycache__/
+*.pyc
+*.pyo
