@@ -27,12 +27,10 @@ def stateReader(filespec):
                 # found the 1st string that I'm seeking
                 if expr1 in dataline:
                     idx1 = N
-                    print(f'idx1: {idx1}')
                 
                 # found the 2nd string that I'm seeking
                 if expr2 in dataline:
                     idx2 = N
-                    print(f'idx2: {idx2}')
 
             # break loop if both indices are found
             if (idx1 is not None) and (idx2 is not None):
@@ -58,10 +56,4 @@ def stateReader(filespec):
         julianDates = np.array(julianDates)
         states = np.array(states)
 
-        print(f'\n\n Julian Dates: \n {julianDates}')
-        print(f'\n\n States: \n {states}')
-
     return julianDates, states
-
-filespec = 'data/Earth_Ephemeris_Data.txt'
-stateReader(filespec)
