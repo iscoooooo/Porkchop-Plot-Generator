@@ -5,7 +5,7 @@ def stateReader(filespec):
     # This function assumes that the loaded Ephmeris Data is in comma separated value (csv) text format.
 
     # Initialize lists to store Julian Dates and states
-    JulianDates = []
+    julianDates = []
     states = []
 
     expr1 = 'SOE' # text to look for in the file
@@ -51,17 +51,17 @@ def stateReader(filespec):
                 if reader.line_num >= idx2:
                     break
 
-                JulianDates.append(float(row[0]))
+                julianDates.append(float(row[0]))
                 states.append([float(value) for value in row[2:8]])
             
         # Convert lists to numpy arrays for further processing
-        JulianDates = np.array(JulianDates)
+        julianDates = np.array(julianDates)
         states = np.array(states)
 
-        print(f'\n\n Julian Dates: \n {JulianDates}')
+        print(f'\n\n Julian Dates: \n {julianDates}')
         print(f'\n\n States: \n {states}')
 
-    return JulianDates, states
+    return julianDates, states
 
 filespec = 'data/Earth_Ephemeris_Data.txt'
 stateReader(filespec)
