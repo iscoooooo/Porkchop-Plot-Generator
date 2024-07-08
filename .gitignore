@@ -4,3 +4,7 @@ Pipfile
 __pycache__/
 *.pyc
 *.pyo
+
+# Ignore ephemeris queries
+data/arrival_data
+data/departure_data
