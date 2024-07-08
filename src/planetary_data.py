@@ -187,8 +187,6 @@ bodies = [
 	jupiter, io, europa, ganymede, callisto,
 	saturn, sun ]
 
-# Add additonal entries for each body
+# Add diameter entry for each body
 for body in bodies:
 	body[ 'diameter' ]    = body[ 'radius' ] * 2 # [km]
-	body[ 'period' ]      = 2 * math.pi / math.sqrt(sun[ 'mu' ]) * body [ 'sma' ] ** 1.5 # [seconds]
-	body[ 'mean_motion' ] = 2 * math.pi / body[ 'period' ] # [rad/s]
