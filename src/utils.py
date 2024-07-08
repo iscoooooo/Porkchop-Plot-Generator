@@ -1,3 +1,7 @@
+'''
+Utility functions
+'''
+
 import csv
 import numpy as np
 
@@ -59,7 +63,6 @@ def stateReader(filespec):
     return julianDates, states
 
 
-
 def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=10000,trajectory='pro'):
     '''
     mu         - gravitational parameter (km^3/s^2)
@@ -113,14 +116,18 @@ def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=10000,trajectory='pro'):
         return (y(z)/C(z))**1.5 * S(z) + A * np.sqrt(y(z)) - np.sqrt(mu)*dt
     
     def dFdz(z):
+        '''
+        Derivative of F(z)
+        '''
         if z == 0:
             return np.sqrt(2)/40*y(0)**1.5 + A/8*(np.sqrt(y(0)) + A*np.sqrt(1/2/y(0)))
         else:
             return (y(z)/C(z))**1.5*(1/2/z*(C(z) - 3*S(z)/2/C(z)) + 3*S(z)**2/4/C(z)) + A/8*(3*S(z)/C(z)*np.sqrt(y(z)) + A*np.sqrt(C(z)/y(z)))
-    
-    ## Stumpff functions:
 
     def C(z):
+        '''
+        Stumpff function
+        '''
         if z > 0:
             return (1 - np.cos(np.sqrt(z))) / z
         elif z < 0:
@@ -129,6 +136,9 @@ def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=10000,trajectory='pro'):
             return 1/2
         
     def S(z):
+        '''
+        Stumpff function
+        '''
         if z > 0:
             return (np.sqrt(z) - np.sin(np.sqrt(z))) / (np.sqrt(z))**3
         elif z < 0:
