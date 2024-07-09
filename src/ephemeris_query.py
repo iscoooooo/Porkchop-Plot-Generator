@@ -24,17 +24,19 @@ def generate_url(ID, start_time, stop_time, step_size):
     '''
     base_url = "https://ssd.jpl.nasa.gov/api/horizons.api?format=text"
     params = {
-        "COMMAND": f"'{ID}'",
-        "OBJ_DATA": "'NO'",
-        "MAKE_EPHEM": "'YES'",
-        "EPHEM_TYPE": "'VECTORS'",
-        "VEC_TABLE": "'2'",
-        "CSV_FORMAT": "'YES'",
-        "CENTER": "'500@0'",
-        "START_TIME": f"'{start_time}'",
-        "STOP_TIME": f"'{stop_time}'",  
-        "STEP_SIZE": f"'{step_size}d'", # days
-        "QUANTITIES": "'2'"
+        "COMMAND"       : f"'{ID}'",
+        "OBJ_DATA"      : "'NO'",
+        "MAKE_EPHEM"    : "'YES'",
+        "EPHEM_TYPE"    : "'VECTORS'",
+        "REF_PLANE"     : "'ECLIPTIC'",
+        "REF_SYSTEM"    : "'J2000'",
+        "VEC_TABLE"     : "'2'",
+        "CSV_FORMAT"    : "'YES'",
+        "CENTER"        : "'500@0'",
+        "START_TIME"    : f"'{start_time}'",
+        "STOP_TIME"     : f"'{stop_time}'",  
+        "STEP_SIZE"     : f"'{step_size}d'", # days
+        "QUANTITIES"    : "'2'"
     }
 
     query_string = "&".join([f"{key}={value}" for key, value in params.items()])
