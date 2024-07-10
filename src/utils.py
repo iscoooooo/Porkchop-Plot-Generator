@@ -178,48 +178,18 @@ def S(z):
     else:
         return 1/6
 
-def newtonRaphson(y,dy,init_guess,tol,maxiter=1000,return_iterations=False):
+def newtonRaphson(F, dFdz, init_guess, tol, maxiter=1000):
     '''
-    Calculate root of single variable function
-	using explicit derivative function
+    Calculate root of single variable function using Newton-Raphson method
     '''
     
-    converged = False # Convergence condition
-    x = [init_guess]  # set initial guess
-    i = 0             # initialize counter
-
-    # Ensure maximum iterations is of the correct type
-    if not isinstance(maxiter, int) or maxiter <= 0:
-        raise ValueError("Maximum iterations 'maxiter' must be a positive integer.")
-
-    # begin loop
-    while i < maxiter and not(converged):
-
-        # compute new root estimate
-        x.append(x[i] - y(x[i]) / dy(x[i]))
-
-        # compute the error
-        err = np.abs( (x[i+1] - x[i]) / x[i+1] )
-
-        if err < tol:
-            converged = True
-
-        # increment counter
-        i = i + 1
-
-    # check for convergence
-    if not(converged):
-        raise RuntimeError(
-            "newtonRaphson: This function did not converge to a solution."
-        )
-
-    sol  = x[-1] # final root estimate
-    iter_count = i     # total ierations
-
-    if return_iterations:
-        return sol, iter_count
-    else:
-        return sol
+    x = init_guess
+    for i in range(maxiter):
+        x_new = x - F(x) / dFdz(x)
+        if np.abs(x_new - x) < tol:
+            return x_new
+        x = x_new
+    raise RuntimeError("newtonRaphson: This function did not converge to a solution.")
     
 
 def norm(vec):
