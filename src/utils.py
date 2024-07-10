@@ -63,26 +63,14 @@ def stateReader(filespec):
     return julianDates, states
 
 
-def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=500,trajectory='pro'):
+def lambert(R1, R2, dt, mu, tol=1e-8, maxiter=500, trajectory='pro'):
     '''
     mu         - gravitational parameter (km^3/s^2)
     R1, R2     - initial and final position vectors (km)
-    r1, r2     - magnitudes of R1 and R2
-    dt         - the time of flight from R1 to R2 (a constant) (s)
-    V1, V2     - initial and final velocity vectors (km/s)
-    cross12    - cross product of R1 into R2
-    dtheta     - angle between R1 and R2
-    A          - a constant given by 'Lambert's Solution' lecture notes
-    z          - alpha*x^2, where alpha is the reciprocal of the
-                semimajor axis and x is the universal anomaly
-    y(z)       - a function of z given by Equation 5.38
-    F(z,dt)    - a function of the variable z and constant dt,
-                - given in 'Lambert's Solution' lecture notes
-    dFdz(z)    - the derivative of F(z,t)
+    dt         - the time of flight from R1 to R2 (s)
     tol        - tolerance on precision of convergence
-    f, g       - Lagrange coefficients
-    fdot, gdot - time derivative of f and g
-    C(z), S(z) - Stumpff functions
+    maxiter    - maximum number of iterations for convergence
+    trajectory - 'pro' for prograde or 'retro' for retrograde trajectory
     '''
 
     # Magnitudes of R1 and R2
@@ -90,25 +78,24 @@ def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=500,trajectory='pro'):
     r2 = np.linalg.norm(R2)
 
     # Compute the cross product between R1 and R2
-    cross12 = np.cross(R1,R2)
+    cross12 = np.cross(R1, R2)
 
     # Compute the change in true anomaly
-    dtheta = np.acos(np.dot(R1,R2)/(r1*r2))
+    dtheta = np.arccos(np.dot(R1, R2) / (r1 * r2))
 
-    if trajectory == 'pro':             # For prograde trajectory
+    if trajectory == 'pro':  # For prograde trajectory
         if cross12[2] < 0:
-            dtheta = 2*np.pi - dtheta
-    elif trajectory == 'retro':         # For retrograde trajectory
+            dtheta = 2 * np.pi - dtheta
+    elif trajectory == 'retro':  # For retrograde trajectory
         if cross12[2] >= 0:
-            dtheta = 2*np.pi - dtheta
+            dtheta = 2 * np.pi - dtheta
     else:
-        print(f'Please indicate whether trajectory is prograde or retrograde with keyword argument.')
+        raise ValueError("Please indicate whether trajectory is prograde or retrograde with keyword argument.")
 
     # Compute the auxiliary function, A(r1,r2,dtheta)
-    A = np.sin(dtheta)*np.sqrt(r1*r2/(1 - np.cos(dtheta)))
+    A = np.sin(dtheta) * np.sqrt(r1 * r2 / (1 - np.cos(dtheta)))
 
     ## Helper functions:
-    
     y = lambda z: r1 + r2 + A * (z * S(z) - 1) / np.sqrt(C(z))
 
     F = lambda z: (y(z) / C(z)) ** 1.5 * S(z) + A * np.sqrt(y(z)) - np.sqrt(mu) * dt
@@ -127,6 +114,9 @@ def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=500,trajectory='pro'):
     if not isinstance(tol, (float, int)) or tol <= 0:
         raise ValueError("Tolerance 'tol' must be a positive number.")
     
+    if not isinstance(maxiter, int) or maxiter <= 0:
+        raise ValueError("Maximum iterations 'maxiter' must be a positive integer.")
+
     # Start with z = 0
     z = 0 
 
@@ -141,14 +131,14 @@ def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=500,trajectory='pro'):
     
     if solved:
         # Compute the Lagrangian coefficients
-        f = 1 - y(z)/r1
-        fdot = (np.sqrt(mu)/(r1*r2))*np.sqrt(y(z)/C(z))*(z*S(z)-1)
-        g = A*np.sqrt(y(z)/mu)
-        gdot = 1 - y(z)/r2
+        f = 1 - y(z) / r1
+        fdot = (np.sqrt(mu) / (r1 * r2)) * np.sqrt(y(z) / C(z)) * (z * S(z) - 1)
+        g = A * np.sqrt(y(z) / mu)
+        gdot = 1 - y(z) / r2
 
         # Compute the velocities V1 & V2
-        V1 = 1/g*(R2 - f*R1)
-        V2 = 1/g*(gdot*R2 - R1)
+        V1 = 1 / g * (R2 - f * R1)
+        V2 = 1 / g * (gdot * R2 - R1)
             
         return V1, V2
     else: 
