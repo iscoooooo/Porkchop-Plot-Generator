@@ -101,13 +101,9 @@ def interplanetary_porkchop( config ):
     v_inf_longs   = np.zeros( (as_, ds) )
     tofs          = np.zeros( (as_, ds) )
 
-    # Create arrays for indexing and meshgrid
-    x = np.arange( ds  )
-    y = np.arange( as_ )
-
     # For each combination of departure and arrivals
-    for nd, dep in enumerate( et_departures ):
-        for na, arr in enumerate ( et_arrivals ):
+    for na, arr in enumerate( et_arrivals ):
+        for nd, dep in enumerate ( et_departures ):
 
             if arr > dep: # Ensure arrival date is after departure date
                 # Calculate transfer time, seconds
@@ -150,8 +146,8 @@ def interplanetary_porkchop( config ):
             if C3_long  > cutoff_c3: C3_long = cutoff_c3
 
             # Calculate v_infinity values at arrival
-            v_inf_short = norm( v_sc_arrive_short - states_arrive[ nd, 3: ] ) 
-            v_inf_long  = norm( v_sc_arrive_long  - states_arrive[ nd, 3: ] )
+            v_inf_short = norm( v_sc_arrive_short - states_arrive[ na, 3: ] ) 
+            v_inf_long  = norm( v_sc_arrive_long  - states_arrive[ na, 3: ] )
 
             # Check for unreasonable values (v_infinity)
             if v_inf_short > _config[ 'cutoff_v' ]: v_inf_short = _config[ 'cutoff_v' ]
@@ -164,7 +160,7 @@ def interplanetary_porkchop( config ):
             v_inf_longs  [ na, nd ] = v_inf_long
             tofs         [ na, nd ] = tof
 
-            print( f'{na} / {as_}.' )
+        print( f'{na} / {as_}.' )
 
     # Convert tof from sec to days
     tofs /= ( 3600.0 * 24.0 )
