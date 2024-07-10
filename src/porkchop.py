@@ -81,7 +81,7 @@ def interplanetary_porkchop( config ):
         arrival_output_path
     )
 
-    # Arrays of departure/arrival times and states
+    # Get ephemeris times and states
     et_departures, states_depart = stateReader(departure_output_path)
     et_arrivals, states_arrive   = stateReader(arrival_output_path)
 
@@ -105,12 +105,13 @@ def interplanetary_porkchop( config ):
     x = np.arange( ds  )
     y = np.arange( as_ )
 
-    # For each combination
-    for na in y:
-        for nd in x:
+    # For each combination of departure and arrivals
+    for nd, dep in enumerate( et_departures ):
+        for na, arr in enumerate ( et_arrivals ):
 
-            # Calculate transfer time, seconds
-            tof = (et_arrivals[ na ] - et_departures [ nd ]) * 3600 * 24
+            if arr > dep: # Ensure arrival date is after departure date
+                # Calculate transfer time, seconds
+                tof = (arr - dep) * 3600 * 24
 
             # Attempt to solve Lambert's problem for velocities
 
@@ -175,6 +176,12 @@ def interplanetary_porkchop( config ):
     '''
     Plotting
     '''
+    # Normalize the departure and arrival date grids 
+    normed_departures = ( et_departures - et_departures[ 0 ] )
+    normed_arrivals   = ( et_arrivals   - et_arrivals[ 0 ]   )
+
+    # Generate departure and arrival date grids
+    dep_mesh, arr_mesh = np.meshgrid( normed_departures, normed_arrivals )
     
     # Create levels arrays
     if _config  [ 'c3_levels'   ] is None:
@@ -197,22 +204,32 @@ def interplanetary_porkchop( config ):
     fig, ax = plt.subplots( figsize = _config[ 'figsize' ] )
 
     c0 = ax.contour(
+        dep_mesh,
+        arr_mesh,
         C3_shorts,
         levels = _config[ 'c3_levels' ], colors = 'm', linewidths = lw
     )
     c1 = ax.contour(
+        dep_mesh,
+        arr_mesh,
         C3_longs,
         levels = _config[ 'c3_levels' ], colors = 'm', linewidths = lw
     )
     c2 = ax.contour(
+        dep_mesh,
+        arr_mesh,
         v_inf_shorts,
         levels = _config[ 'vinf_levels' ], colors = 'deepskyblue', linewidths = lw
     )
     c3 = ax.contour(
+        dep_mesh,
+        arr_mesh,
         v_inf_longs,
         levels = _config[ 'vinf_levels' ], colors = 'deepskyblue', linewidths = lw
     )
     c4 = ax.contour(
+        dep_mesh,
+        arr_mesh,
         tofs,
         levels = _config[ 'tof_levels' ], colors = 'white', linewidths = lw * 0.6
     )
