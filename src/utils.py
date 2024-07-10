@@ -63,7 +63,7 @@ def stateReader(filespec):
     return julianDates, states
 
 
-def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=10000,trajectory='pro'):
+def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=500,trajectory='pro'):
     '''
     mu         - gravitational parameter (km^3/s^2)
     R1, R2     - initial and final position vectors (km)
@@ -109,43 +109,20 @@ def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=10000,trajectory='pro'):
 
     ## Helper functions:
     
-    def y(z):
-        return r1 + r2 + A*(z*S(z) - 1) / np.sqrt(C(z))
-    
-    def F(z):
-        return (y(z)/C(z))**1.5 * S(z) + A * np.sqrt(y(z)) - np.sqrt(mu)*dt
-    
-    def dFdz(z):
-        '''
-        Derivative of F(z)
-        '''
-        if z == 0:
-            return np.sqrt(2)/40*y(0)**1.5 + A/8*(np.sqrt(y(0)) + A*np.sqrt(1/2/y(0)))
-        else:
-            return (y(z)/C(z))**1.5*(1/2/z*(C(z) - 3*S(z)/2/C(z)) + 3*S(z)**2/4/C(z)) + A/8*(3*S(z)/C(z)*np.sqrt(y(z)) + A*np.sqrt(C(z)/y(z)))
+    y = lambda z: r1 + r2 + A * (z * S(z) - 1) / np.sqrt(C(z))
 
-    def C(z):
-        '''
-        Stumpff function
-        '''
-        if z > 0:
-            return (1 - np.cos(np.sqrt(z))) / z
-        elif z < 0:
-            return (np.cosh(np.sqrt(-z)) - 1) / (-z)
-        else:
-            return 1/2
-        
-    def S(z):
-        '''
-        Stumpff function
-        '''
-        if z > 0:
-            return (np.sqrt(z) - np.sin(np.sqrt(z))) / (np.sqrt(z))**3
-        elif z < 0:
-            return (np.sinh(np.sqrt(-z)) - np.sqrt(-z)) / (np.sqrt(-z))**3
-        else:
-            return 1/6
-    
+    F = lambda z: (y(z) / C(z)) ** 1.5 * S(z) + A * np.sqrt(y(z)) - np.sqrt(mu) * dt
+
+    dFdz = lambda z: (
+        np.sqrt(2) / 40 * y(0) ** 1.5 + A / 8 * (np.sqrt(y(0)) + A * np.sqrt(1 / 2 / y(0)))
+        if z == 0
+        else (y(z) / C(z)) ** 1.5 * (
+            1 / 2 / z * (C(z) - 3 * S(z) / 2 / C(z)) + 3 * S(z) ** 2 / 4 / C(z)
+        ) + A / 8 * (
+            3 * S(z) / C(z) * np.sqrt(y(z)) + A * np.sqrt(C(z) / y(z))
+        )
+    )
+
     # Ensure tolerance and maximum iterations are of the correct type
     if not isinstance(tol, (float, int)) or tol <= 0:
         raise ValueError("Tolerance 'tol' must be a positive number.")
@@ -156,20 +133,56 @@ def lambert(R1,R2,dt,mu,tol=1e-8,maxiter=10000,trajectory='pro'):
     # Find z by iterating using Newton's method until convergence within the error tolerance:
     z = newtonRaphson(F, dFdz, 0, tol, maxiter)
 
-    # Compute the Lagrangian coefficients
-    f = 1 - y(z)/r1
-    fdot = (np.sqrt(mu)/(r1*r2))*np.sqrt(y(z)/C(z))*(z*S(z)-1)
-    g = A*np.sqrt(y(z)/mu)
-    gdot = 1 - y(z)/r2
+    # Check the solution
+    if np.isnan(z) or np.isinf(z):
+        solved = False
+    else:
+        solved = True 
+    
+    if solved:
+        # Compute the Lagrangian coefficients
+        f = 1 - y(z)/r1
+        fdot = (np.sqrt(mu)/(r1*r2))*np.sqrt(y(z)/C(z))*(z*S(z)-1)
+        g = A*np.sqrt(y(z)/mu)
+        gdot = 1 - y(z)/r2
 
-    # Compute the velocities V1 & V2
-    V1 = 1/g*(R2 - f*R1)
-    V2 = 1/g*(gdot*R2 - R1)
-        
-    return V1, V2
+        # Compute the velocities V1 & V2
+        V1 = 1/g*(R2 - f*R1)
+        V2 = 1/g*(gdot*R2 - R1)
+            
+        return V1, V2
+    else: 
+        print('Lambert solver did not converge.')
+        return np.array([0, 0, 0]), np.array([0, 0, 0])
 
+
+def C(z):
+    '''
+    Stumpff function
+    '''
+    if z > 0:
+        return (1 - np.cos(np.sqrt(z))) / z
+    elif z < 0:
+        return (np.cosh(np.sqrt(-z)) - 1) / (-z)
+    else:
+        return 1/2
+    
+def S(z):
+    '''
+    Stumpff function
+    '''
+    if z > 0:
+        return (np.sqrt(z) - np.sin(np.sqrt(z))) / (np.sqrt(z))**3
+    elif z < 0:
+        return (np.sinh(np.sqrt(-z)) - np.sqrt(-z)) / (np.sqrt(-z))**3
+    else:
+        return 1/6
 
 def newtonRaphson(y,dy,init_guess,tol,maxiter=1000,return_iterations=False):
+    '''
+    Calculate root of single variable function
+	using explicit derivative function
+    '''
     
     converged = False # Convergence condition
     x = [init_guess]  # set initial guess
@@ -196,7 +209,9 @@ def newtonRaphson(y,dy,init_guess,tol,maxiter=1000,return_iterations=False):
 
     # check for convergence
     if not(converged):
-        print(f'newtonRaphson: This function did not converge to a solution.')
+        raise RuntimeError(
+            "newtonRaphson: This function did not converge to a solution."
+        )
 
     sol  = x[-1] # final root estimate
     iter_count = i     # total ierations
@@ -205,3 +220,7 @@ def newtonRaphson(y,dy,init_guess,tol,maxiter=1000,return_iterations=False):
         return sol, iter_count
     else:
         return sol
+    
+
+def norm(vec):
+    return np.linalg.norm(vec)
