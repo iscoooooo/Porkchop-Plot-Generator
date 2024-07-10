@@ -11,6 +11,9 @@ import planetary_data as pd
 from ephemeris_query import *
 from utils import *
 
+# Dark plotting background
+plt.style.use( 'dark_background' )
+
 
 def interplanetary_porkchop( config ):
     
@@ -23,7 +26,7 @@ def interplanetary_porkchop( config ):
         'arrival0'      : '2020-11-01',         # Initial arrival date
         'arrival1'      : '2022-01-24',         # Final arrival date
         'mu'            : pd.sun[ 'mu' ],       # Gravitational parameter in km**3/s**2
-        'step'          : 1,                    # Step size in days
+        'step'          : 5,                    # Step size in days
         'frame'         : 'J2000',              # Ecliptic of J2000
         'observer'      : '500@0',              # Solar Sytem Barycenter
         'cutoff_v'      : 20.0,                 # Maximum vinf to consider             
@@ -106,44 +109,148 @@ def interplanetary_porkchop( config ):
     for na in y:
         for nd in x:
 
-            # State of planet0 at departure
-
-
-            # State of planet1 at arrival
-
-
-            # Calculate transfer time
-
+            # Calculate transfer time, seconds
+            tof = (et_arrivals[ na ] - et_departures [ nd ]) * 3600 * 24
 
             # Attempt to solve Lambert's problem for velocities
 
+            # Short way (prograde)
+            try:
+                v_sc_depart_short, v_sc_arrive_short = lambert(
+                    states_depart[ nd, :3 ],
+                    states_arrive[ na, :3 ],
+                    tof,
+                    _config[ 'mu' ],
+                    trajectory='pro'
+                )
+            except:
+                v_sc_depart_short = np.array( [1000, 1000, 1000] )
+                v_sc_arrive_short = np.array( [1000, 1000, 1000] )
+            
+            # Long way (retrograde)
+            try:
+                v_sc_depart_long, v_sc_arrive_long = lambert(
+                    states_depart[ nd, :3 ],
+                    states_arrive[ na, :3 ],
+                    tof,
+                    _config[ 'mu' ],
+                    trajectory='retro'
+                )
+            except:
+                v_sc_depart_long = np.array( [1000, 1000, 1000] )
+                v_sc_arrive_long = np.array( [1000, 1000, 1000] )
 
             # Calculate C3 values at departure
+            C3_short = norm( v_sc_depart_short - states_depart[ nd, 3: ] ) ** 2
+            C3_long  = norm( v_sc_depart_long  - states_depart[ nd, 3: ] ) ** 2
 
-
-            # Check for unreasonable  (C3)
-
+            # Check for unreasonable values (C3)
+            if C3_short > cutoff_c3: C3_short = cutoff_c3
+            if C3_long  > cutoff_c3: C3_long = cutoff_c3
 
             # Calculate v_infinity values at arrival
-
+            v_inf_short = norm( v_sc_arrive_short - states_arrive[ nd, 3: ] ) 
+            v_inf_long  = norm( v_sc_arrive_long  - states_arrive[ nd, 3: ] )
 
             # Check for unreasonable values (v_infinity)
+            if v_inf_short > _config[ 'cutoff_v' ]: v_inf_short = _config[ 'cutoff_v' ]
+            if v_inf_long  > _config[ 'cutoff_v' ]: v_inf_long  = _config[ 'cutoff_v' ]
 
+            # Append values to corresponding arrays
+            C3_shorts    [ na, nd ] = C3_short
+            C3_longs     [ na, nd ] = C3_long
+            v_inf_shorts [ na, nd ] = v_inf_short
+            v_inf_longs  [ na, nd ] = v_inf_long
+            tofs         [ na, nd ] = tof
 
-            # Append values to corresponding array
-
+            print( f'{na} / {as_}.' )
 
     # Convert tof from sec to days
-
+    tofs /= ( 3600.0 * 24.0 )
 
     # Total delta-v
-
-    #------------------------------------------------------
+    dv_shorts = v_inf_shorts + np.sqrt( C3_shorts )
+    dv_longs  = v_inf_longs  + np.sqrt( C3_longs  )
+    
     '''
     Plotting
     '''
     
     # Create levels arrays
+    if _config  [ 'c3_levels'   ] is None:
+        _config [ 'c3_levels'   ] = np.arange( 10, 50, 2)
 
+    if _config  [ 'vinf_levels' ] is None:
+        _config [ 'vinf_levels' ] = np.arange( 0, 15, 1)
+
+    if _config  [ 'tof_levels'  ] is None:
+        _config [ 'tof_levels'  ] = np.arange( 100, 500, 20)
+
+    if _config  [ 'dv_levels'   ] is None:
+        _config [ 'dv_levels'   ] = np.arange( 3, 20, 0.5)
+
+    # Define linewdith
+    lw = _config[ 'lw' ]
+
+    # Create plots
+
+    fig, ax = plt.subplots( figsize = _config[ 'figsize' ] )
+
+    c0 = ax.contour(
+        C3_shorts,
+        levels = _config[ 'c3_levels' ], colors = 'm', linewidths = lw
+    )
+    c1 = ax.contour(
+        C3_longs,
+        levels = _config[ 'c3_levels' ], colors = 'm', linewidths = lw
+    )
+    c2 = ax.contour(
+        v_inf_shorts,
+        levels = _config[ 'vinf_levels' ], colors = 'deepskyblue', linewidths = lw
+    )
+    c3 = ax.contour(
+        v_inf_longs,
+        levels = _config[ 'vinf_levels' ], colors = 'deepskyblue', linewidths = lw
+    )
+    c4 = ax.contour(
+        tofs,
+        levels = _config[ 'tof_levels' ], colors = 'white', linewidths = lw * 0.6
+    )
+
+    
+    plt.clabel( c0, fmt = '%i')
+    plt.clabel( c1, fmt = '%i')
+    plt.clabel( c2, fmt = '%i')
+    plt.clabel( c3, fmt = '%i')
+    plt.clabel( c4, fmt = '%i')
+
+    plt.plot( [ 0 ], [ 0 ], 'm' )
+    plt.plot( [ 0 ], [ 0 ], 'c' )
+    plt.plot( [ 0 ], [ 0 ], 'w' )
+
+    plt.legend(
+        [
+            r'C3 ($\dfrac{km^2}{s^2}$)',
+            r'$V_{\infty}\; (\dfrac{km}{s})$',
+            r'Time of Flight (days)'
+        ],
+        bbox_to_anchor = ( 1.005, 1.01 ),
+        fontsize = 10
+    )
+
+    ax.set_title( _config[ 'title' ], fontsize = _config[ 'fontsize' ] )
+    ax.set_ylabel( 'Arrival (Days Past %s)' % _config[ 'arrival0' ], fontsize = _config[ 'fontsize' ] )
+    ax.set_xlabel( 'Departure (Days Past %s)' % _config[ 'departure0' ], fontsize = _config[ 'fontsize' ] )
+
+    if _config[ 'show' ]:
+        plt.show()
+
+    if _config[ 'filename' ] is not None:
+        plt.savefig( _config[ 'filename' ], dpi = _config[ 'dpi' ] )
+        print( 'Saved', _config[ 'filename' ] )
+    
+    '''
+    delta V plot
+    '''
 
     pass
