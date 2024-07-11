@@ -23,11 +23,11 @@ def main():
         'tof_levels'    : None,                 # tof levels for contour plot
         'dv_levels'     : None,                 # dv levels for contour plot
         'dv_cmap'       : 'RdPu_r',             # color map for dv contours
-        'figsize'       : ( 20, 10 ),           # figure size for contour plot
+        'figsize'       : ( 6, 10 ),            # figure size for contour plot
         'lw'            : 1.5,                  # linewidth for contour lines
         'title'         : 'Porkchop Plot',      # Plot title
         'fontsize'      : 15,                   # Axes fontsize
-        'show'          : True,                # For displaying the figure
+        'show'          : True,                 # For displaying the figure
         'filename'      : None,                 # Specify filename for c3 plot
         'filename_dv'   : None,                 # Specify filename for dv plot
         'dpi'           : 300,                  # Specify target dpi
