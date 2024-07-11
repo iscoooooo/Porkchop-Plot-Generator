@@ -120,7 +120,8 @@ def interplanetary_porkchop( config ):
                     _config[ 'mu' ],
                     trajectory='pro'
                 )
-            except:
+            except Exception as e:
+                print(f"Prograde Lambert solution failed: {e}")
                 v_sc_depart_short = np.array( [1000, 1000, 1000] )
                 v_sc_arrive_short = np.array( [1000, 1000, 1000] )
             
@@ -133,7 +134,8 @@ def interplanetary_porkchop( config ):
                     _config[ 'mu' ],
                     trajectory='retro'
                 )
-            except:
+            except Exception as e:
+                print(f"Retrograde Lambert solution failed: {e}")
                 v_sc_depart_long = np.array( [1000, 1000, 1000] )
                 v_sc_arrive_long = np.array( [1000, 1000, 1000] )
 
@@ -160,7 +162,7 @@ def interplanetary_porkchop( config ):
             v_inf_longs  [ na, nd ] = v_inf_long
             tofs         [ na, nd ] = tof
 
-        print( f'{na} / {as_}.' )
+        print( f'{na + 1} / {as_}.' )
 
     # Convert tof from sec to days
     tofs /= ( 3600.0 * 24.0 )
@@ -265,5 +267,3 @@ def interplanetary_porkchop( config ):
     '''
     delta V plot
     '''
-
-    pass
