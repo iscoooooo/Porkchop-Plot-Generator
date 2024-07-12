@@ -56,6 +56,7 @@ def interplanetary_porkchop( config ):
     '''
     Data handling and Ephemeris Query
     '''
+
     # Determine the directory for saving ephemeris data
     current_dir = os.path.dirname( __file__ )
     project_root = os.path.dirname( current_dir )
@@ -71,10 +72,10 @@ def interplanetary_porkchop( config ):
 
     # Create the data subdirectories if they doesn't exist
     if not os.path.exists( departure_dir ):
-        os.makedirs( departure_dir )
+        os.makedirs( departure_dir, exist_ok = True )
 
-    if not os.path.exists( departure_dir ):
-        os.makedirs( arrival_dir )
+    if not os.path.exists( arrival_dir ):
+        os.makedirs( arrival_dir, exist_ok = True )
 
     # Define target output path for departure and arrival data
     departure_output_path = os.path.join(
@@ -210,6 +211,14 @@ def interplanetary_porkchop( config ):
     '''
     Plotting
     '''
+
+    # Create subdirectories for figures
+    fig_dir = os.path.join( data_dir, 'fig' )
+
+    # Create the fig subdirectory if it doesn't exist
+    if not os.path.exists( fig_dir ):
+        os.makedirs( fig_dir, exist_ok = True )
+
     # Normalize the departure and arrival date grids 
     normed_departures = ( et_departures - et_departures[ 0 ] )
     normed_arrivals   = ( et_arrivals   - et_arrivals[ 0 ]   )
@@ -268,7 +277,6 @@ def interplanetary_porkchop( config ):
         levels = _config[ 'tof_levels' ], colors = 'white', linewidths = lw * 0.6
     )
 
-    
     plt.clabel( c0, fmt = '%i')
     plt.clabel( c1, fmt = '%i')
     plt.clabel( c2, fmt = '%i')
@@ -293,12 +301,12 @@ def interplanetary_porkchop( config ):
     ax.set_ylabel( 'Arrival (Days Past %s)' % _config[ 'arrival0' ], fontsize = _config[ 'fontsize' ] )
     ax.set_xlabel( 'Departure (Days Past %s)' % _config[ 'departure0' ], fontsize = _config[ 'fontsize' ] )
 
+    if _config[ 'filename' ] is not None:
+        plt.savefig( os.path.join( fig_dir, _config[ 'filename' ] ), dpi = _config[ 'dpi' ] )
+        print( 'Saved', _config[ 'filename' ] )
+
     if _config[ 'show' ]:
         plt.show()
-
-    if _config[ 'filename' ] is not None:
-        plt.savefig( _config[ 'filename' ], dpi = _config[ 'dpi' ] )
-        print( 'Saved', _config[ 'filename' ] )
     
     plt.close()
 
@@ -309,18 +317,24 @@ def interplanetary_porkchop( config ):
     fig, ax = plt.subplots( figsize = _config[ 'figsize' ] )
 
     c0 = ax.contour(
+        dep_mesh,
+        arr_mesh,
         dv_shorts,
         levels = _config[ 'dv_levels' ],
         cmap = _config[ 'dv_cmap' ], 
         linewidths = lw
     )
     c1 = ax.contour(
+        dep_mesh,
+        arr_mesh,
         dv_longs,
         levels = _config[ 'dv_levels' ],
         cmap = _config[ 'dv_cmap' ], 
         linewidths = lw
     )
     c2 = ax.contour(
+        dep_mesh,
+        arr_mesh,
         tofs,
         levels = _config[ 'tof_levels' ],
         colors = 'c', 
@@ -335,11 +349,11 @@ def interplanetary_porkchop( config ):
     ax.set_ylabel( 'Arrival (Days Past %s)' % _config[ 'arrival0' ], fontsize = _config[ 'fontsize' ] )
     ax.set_xlabel( 'Departure (Days Past %s)' % _config[ 'departure0' ], fontsize = _config[ 'fontsize' ] )
 
+    if _config[ 'filename_dv' ] is not None:
+        plt.savefig( os.path.join( fig_dir, _config[ 'filename_dv' ] ), dpi = _config[ 'dpi' ] )
+        print( 'Saved', _config[ 'filename_dv' ] )
+
     if _config[ 'show' ]:
         plt.show()
-
-    if _config[ 'filename_dv' ] is not None:
-        plt.savefig( _config[ 'filename_dv' ], dpi = _config[ 'dpi' ] )
-        print( 'Saved', _config[ 'filename_dv' ] )
 
     plt.close()
