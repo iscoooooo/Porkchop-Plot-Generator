@@ -3,6 +3,9 @@ Porkchop Plot Generator
 '''
 
 # Python Standard Libraries
+import os
+
+# 3rd Party Libraries
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -50,8 +53,38 @@ def interplanetary_porkchop( config ):
     for key in config.keys():
         _config[ key ] = config [ key ]
 
-    # Define cutoff C3
-    cutoff_c3 = _config[ 'cutoff_v' ] ** 2
+    '''
+    Data handling and Ephemeris Query
+    '''
+    # Determine the directory for saving ephemeris data
+    current_dir = os.path.dirname( __file__ )
+    project_root = os.path.dirname( current_dir )
+    data_dir = os.path.join( project_root, 'data' )
+
+    # Create the main data directory if it doesn't exist
+    if not os.path.exists( data_dir ):
+        os.makedirs( data_dir, exist_ok = True )
+
+    # Create subdirectories for departure and arrival data 
+    departure_dir = os.path.join( data_dir, 'departure_data' )
+    arrival_dir = os.path.join( data_dir, 'arrival_data')
+
+    # Create the data subdirectories if they doesn't exist
+    if not os.path.exists( departure_dir ):
+        os.makedirs( departure_dir )
+
+    if not os.path.exists( departure_dir ):
+        os.makedirs( arrival_dir )
+
+    # Define target output path for departure and arrival data
+    departure_output_path = os.path.join(
+        departure_dir,
+        f"{ _config[ 'planet0' ] }_{ _config[ 'departure0' ] }_{ _config[ 'departure1' ] }.txt"
+    )
+    arrival_output_path = os.path.join(
+        arrival_dir,
+        f"{ _config[ 'planet1' ] }_{ _config[ 'arrival0' ] }_{ _config[ 'arrival1' ] }.txt"
+    )
 
     # Generate URLs for querying ephemeris data from Horizons API
     url_departure = generate_url(
@@ -67,10 +100,6 @@ def interplanetary_porkchop( config ):
         _config[ 'step' ]
     )
 
-    # Define target output path for departure and arrival data
-    departure_output_path = f"{_config[ 'planet0' ]}_{_config[ 'departure0' ]}_{_config[ 'departure1']}.txt"
-    arrival_output_path = f"{_config[ 'planet1' ]}_{_config[ 'arrival0' ]}_{_config[ 'arrival1']}.txt"
-
     # Submit API request and save the response to text files in target paths
     save_query_to_file(
         url_departure,
@@ -81,6 +110,13 @@ def interplanetary_porkchop( config ):
         arrival_output_path
     )
 
+    '''
+    Calculations
+    '''
+
+    # Define cutoff C3
+    cutoff_c3 = _config[ 'cutoff_v' ] ** 2
+
     # Get ephemeris times and states
     et_departures, states_depart = stateReader(departure_output_path)
     et_arrivals, states_arrive   = stateReader(arrival_output_path)
@@ -89,10 +125,6 @@ def interplanetary_porkchop( config ):
     ds  = len( et_departures )
     as_ = len( et_arrivals   )
     total = ds * as_
-
-    print( 'Departure days: %i.'     % ds    )
-    print( 'Arrival days: %i.'       % as_   )
-    print( 'Total Combinations: %i.' % total )
 
     # Create empty array for C3, v_infinity, and tof to store data from lambert's solutions
     C3_shorts     = np.zeros( (as_, ds) )
@@ -163,6 +195,10 @@ def interplanetary_porkchop( config ):
             tofs         [ na, nd ] = tof
 
         print( f'{na + 1} / {as_}.' )
+
+    print( '\nDeparture days: %i.'     % ds    )
+    print( 'Arrival days: %i.'         % as_   )
+    print( 'Total Combinations: %i.'   % total )
 
     # Convert tof from sec to days
     tofs /= ( 3600.0 * 24.0 )
