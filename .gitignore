@@ -8,3 +8,6 @@ __pycache__/
 # Ignore ephemeris queries
 data/arrival_data
 data/departure_data
+
+# Ignore figure output
+data/fig
