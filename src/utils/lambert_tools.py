@@ -1,3 +1,7 @@
+'''
+Lambert's Problem Tools
+'''
+
 # Third-party Libraries
 import numpy as np
 
