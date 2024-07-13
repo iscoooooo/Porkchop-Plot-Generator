@@ -10,9 +10,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Porkchop-Plot-Generator libraries
-import planetary_data as pd
-from ephemeris_query import *
-from utils import *
+from utils import planetary_data  as pd
+from utils import lambert_tools   as lt
+from utils import ephemeris_query as eq
+from utils.numerical_tools import norm
 
 # Dark plotting background
 plt.style.use( 'dark_background' )
@@ -88,13 +89,13 @@ def interplanetary_porkchop( config ):
     )
 
     # Generate URLs for querying ephemeris data from Horizons API
-    url_departure = generate_url(
+    url_departure = eq.generate_url(
         _config[ 'planet0' ],
         _config[ 'departure0' ],
         _config[ 'departure1' ],
         _config[ 'step' ]
     ) 
-    url_arrival   = generate_url(
+    url_arrival   = eq.generate_url(
         _config[ 'planet1' ],
         _config[ 'arrival0' ],
         _config[ 'arrival1' ],
@@ -102,11 +103,11 @@ def interplanetary_porkchop( config ):
     )
 
     # Submit API request and save the response to text files in target paths
-    save_query_to_file(
+    eq.save_query_to_file(
         url_departure,
         departure_output_path
     )
-    save_query_to_file(
+    eq.save_query_to_file(
         url_arrival,
         arrival_output_path
     )
@@ -119,8 +120,8 @@ def interplanetary_porkchop( config ):
     cutoff_c3 = _config[ 'cutoff_v' ] ** 2
 
     # Get ephemeris times and states
-    et_departures, states_depart = stateReader(departure_output_path)
-    et_arrivals, states_arrive   = stateReader(arrival_output_path)
+    et_departures, states_depart = eq.stateReader(departure_output_path)
+    et_arrivals, states_arrive   = eq.stateReader(arrival_output_path)
 
     # Number of days in each array and total combinations
     ds  = len( et_departures )
@@ -146,7 +147,7 @@ def interplanetary_porkchop( config ):
 
             # Short way (prograde)
             try:
-                v_sc_depart_short, v_sc_arrive_short = lambert(
+                v_sc_depart_short, v_sc_arrive_short = lt.lambert_solver(
                     states_depart[ nd, :3 ],
                     states_arrive[ na, :3 ],
                     tof,
@@ -160,7 +161,7 @@ def interplanetary_porkchop( config ):
             
             # Long way (retrograde)
             try:
-                v_sc_depart_long, v_sc_arrive_long = lambert(
+                v_sc_depart_long, v_sc_arrive_long = lt.lambert_solver(
                     states_depart[ nd, :3 ],
                     states_arrive[ na, :3 ],
                     tof,

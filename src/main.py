@@ -1,5 +1,5 @@
 # Porkchop-Plot-Generator Libraries
-import planetary_data as pd
+from utils import planetary_data as pd
 from porkchop import interplanetary_porkchop
 
 # Main code
