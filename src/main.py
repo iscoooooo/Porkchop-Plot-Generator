@@ -2,9 +2,10 @@
 from utils import planetary_data as pd
 from porkchop import interplanetary_porkchop
 
-# Main code
+# Main script
 
 def main():
+
     # config parameters for porkchop plot generator
     config = {
         'planet0'       : pd.earth[ 'ID' ],     # Departure planet
@@ -31,9 +32,10 @@ def main():
         'filename'      : None,                 # Specify filename for c3 plot
         'filename_dv'   : None,                 # Specify filename for dv plot
         'dpi'           : 300,                  # Specify target dpi
-        'load'          : False                 #?
+        'load'          : False                 # Load existing ephemeris data
     }
 
+    # Call porkchop plot generator
     interplanetary_porkchop( config )
 
 if __name__ == "__main__":
