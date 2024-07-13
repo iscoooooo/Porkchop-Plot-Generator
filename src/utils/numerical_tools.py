@@ -1,8 +1,7 @@
 '''
-Utility functions
+Numerical tools
 '''
 
-import csv
 import numpy as np
 
 
