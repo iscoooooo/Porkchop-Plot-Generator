@@ -47,7 +47,7 @@ def interplanetary_porkchop( config ):
         'filename'      : None,                 # Specify filename for c3 plot
         'filename_dv'   : None,                 # Specify filename for dv plot
         'dpi'           : 300,                  # Specify target dpi
-        'load'          : False                 #
+        'load'          : False                 # Load existing ephemeris data
     }
     
     # Overrides default config parameters
@@ -88,29 +88,35 @@ def interplanetary_porkchop( config ):
         f"{ _config[ 'planet1' ] }_{ _config[ 'arrival0' ] }_{ _config[ 'arrival1' ] }.txt"
     )
 
-    # Generate URLs for querying ephemeris data from Horizons API
-    url_departure = eq.generate_url(
-        _config[ 'planet0' ],
-        _config[ 'departure0' ],
-        _config[ 'departure1' ],
-        _config[ 'step' ]
-    ) 
-    url_arrival   = eq.generate_url(
-        _config[ 'planet1' ],
-        _config[ 'arrival0' ],
-        _config[ 'arrival1' ],
-        _config[ 'step' ]
-    )
+    '''
+    Check if the load parameter is set to True and if the necessary data files exist. If both conditions are met, it will load the data from these files instead of querying the API. If not, it will proceed with the API requests as usua
+    '''
+    if _config[ 'load' ] and os.path.exists( departure_output_path ) and os.path.exists( arrival_output_path ):
+        print('Loading ephemeris data from existing files.')
+    else:
+        # Generate URLs for querying ephemeris data from Horizons API
+        url_departure = eq.generate_url(
+            _config[ 'planet0' ],
+            _config[ 'departure0' ],
+            _config[ 'departure1' ],
+            _config[ 'step' ]
+        ) 
+        url_arrival   = eq.generate_url(
+            _config[ 'planet1' ],
+            _config[ 'arrival0' ],
+            _config[ 'arrival1' ],
+            _config[ 'step' ]
+        )
 
-    # Submit API request and save the response to text files in target paths
-    eq.save_query_to_file(
-        url_departure,
-        departure_output_path
-    )
-    eq.save_query_to_file(
-        url_arrival,
-        arrival_output_path
-    )
+        # Submit API request and save the response to text files in target paths
+        eq.save_query_to_file(
+            url_departure,
+            departure_output_path
+        )
+        eq.save_query_to_file(
+            url_arrival,
+            arrival_output_path
+        )
 
     '''
     Calculations
