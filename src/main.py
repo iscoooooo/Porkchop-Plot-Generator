@@ -1,15 +1,22 @@
+'''
+Main Script
+'''
+
 # Porkchop-Plot-Generator Libraries
 from utils import planetary_data as pd
 from porkchop import interplanetary_porkchop
 
-# Main script
 
 def main():
 
+    # Departure Planet
+    departPlanet = pd.earth
+
+    # Target Planet
+    targetPlanet = pd.mars
+
     # config parameters for porkchop plot generator
     config = {
-        'planet0'       : pd.earth[ 'ID' ],     # Departure planet
-        'planet1'       : pd.mars[ 'ID' ],      # Target planet
         'departure0'    : '2020-07-01',         # Intial departure date
         'departure1'    : '2020-09-01',         # Final departure date
         'arrival0'      : '2020-11-01',         # Initial arrival date
@@ -36,7 +43,7 @@ def main():
     }
 
     # Call porkchop plot generator
-    interplanetary_porkchop( config )
+    interplanetary_porkchop( departPlanet, targetPlanet, config )
 
 if __name__ == "__main__":
     main()
