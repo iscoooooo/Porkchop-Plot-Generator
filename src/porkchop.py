@@ -225,8 +225,8 @@ def interplanetary_porkchop( departPlanet, targetPlanet, config ):
     print(f'Total Combinations      : {total}' )
     print(f'Trajectory Calculations : {2*total}')
     print(f"{"*" * 51}")
-    print(f'Minimum C3              : {min_C3_short:.2f} (km**2/s**2)')
-    print(f'Minimum delta-V         : {min_v_inf_short:.2f}  (km/s)')
+    print(f'Minimum departure C3    : {min_C3_short:.2f} (km**2/s**2)')
+    print(f'Minimum arrival delta-V : {min_v_inf_short:.2f}  (km/s)')
 
     # Convert tof from sec to days
     tofs /= ( 3600.0 * 24.0 )
