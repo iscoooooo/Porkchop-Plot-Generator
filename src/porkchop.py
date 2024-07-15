@@ -19,12 +19,10 @@ from utils.numerical_tools import norm
 plt.style.use( 'dark_background' )
 
 
-def interplanetary_porkchop( config ):
+def interplanetary_porkchop( departPlanet, targetPlanet, config ):
     
     # Default config dictionary
     _config = {
-        'planet0'       : pd.earth[ 'ID' ],     # Departure planet
-        'planet1'       : pd.mars[ 'ID' ],      # Target planet
         'departure0'    : '2020-07-01',         # Intial departure date
         'departure1'    : '2020-09-01',         # Final departure date
         'arrival0'      : '2020-11-01',         # Initial arrival date
@@ -81,11 +79,11 @@ def interplanetary_porkchop( config ):
     # Define target output path for departure and arrival data
     departure_output_path = os.path.join(
         departure_dir,
-        f"{ _config[ 'planet0' ] }_{ _config[ 'departure0' ] }_{ _config[ 'departure1' ] }.txt"
+        f"{ departPlanet[ 'name'] }_{ _config[ 'departure0' ] }_{ _config[ 'departure1' ] }.txt"
     )
     arrival_output_path = os.path.join(
         arrival_dir,
-        f"{ _config[ 'planet1' ] }_{ _config[ 'arrival0' ] }_{ _config[ 'arrival1' ] }.txt"
+        f"{ targetPlanet[ 'name' ] }_{ _config[ 'arrival0' ] }_{ _config[ 'arrival1' ] }.txt"
     )
 
     '''
@@ -96,13 +94,13 @@ def interplanetary_porkchop( config ):
     else:
         # Generate URLs for querying ephemeris data from Horizons API
         url_departure = eq.generate_url(
-            _config[ 'planet0' ],
+            departPlanet[ 'ID' ],
             _config[ 'departure0' ],
             _config[ 'departure1' ],
             _config[ 'step' ]
         ) 
         url_arrival   = eq.generate_url(
-            _config[ 'planet1' ],
+            targetPlanet[ 'ID' ],
             _config[ 'arrival0' ],
             _config[ 'arrival1' ],
             _config[ 'step' ]
@@ -202,11 +200,33 @@ def interplanetary_porkchop( config ):
             v_inf_longs  [ na, nd ] = v_inf_long
             tofs         [ na, nd ] = tof
 
-        print( f'{na + 1} / {as_}.' )
+        print( f'{(na + 1) / as_ * 100:.1f}%' )
 
-    print( '\nDeparture days: %i.'     % ds    )
-    print( 'Arrival days: %i.'         % as_   )
-    print( 'Total Combinations: %i.'   % total )
+    # After the loop, compute statistics for C3 and v_inf
+    min_C3_short = np.min(C3_shorts)
+    min_v_inf_short = np.min(v_inf_shorts)
+
+    # Print results summary
+    print("\n")
+    print(f"{"*" * 51}")
+    print(f"{" " * 18}Results Summary")          
+    print(f"{"*" * 51}")
+    print(f"Departure body name     : {departPlanet[ 'name' ]} ({departPlanet[ 'ID' ]})")
+    print(f"Target body name        : {targetPlanet[ 'name' ]} ({targetPlanet[ 'ID' ]})")
+    print(f"Center body name        : SOLAR SYSTEM BARYCENTER")
+    print(f"Reference frame         : Ecliptic of {_config[ 'frame' ]}")
+    print(f"{"*" * 51}")
+    print(f"Launch window           : {_config[ 'departure0' ]} --> {_config[ 'departure1' ]}")
+    print(f"Arrival window          : {_config[ 'arrival0' ]} --> {_config[ 'arrival1' ]}" )
+    print(f"Step-size               : {_config[ 'step' ]}")
+    print(f"{"*" * 51}")
+    print(f'Departure days          : {ds}'    )
+    print(f'Arrival days            : {as_}'   )
+    print(f'Total Combinations      : {total}' )
+    print(f'Trajectory Calculations : {2*total}')
+    print(f"{"*" * 51}")
+    print(f'Minimum C3              : {min_C3_short:.2f} (km**2/s**2)')
+    print(f'Minimum delta-V         : {min_v_inf_short:.2f}  (km/s)')
 
     # Convert tof from sec to days
     tofs /= ( 3600.0 * 24.0 )
@@ -304,7 +324,10 @@ def interplanetary_porkchop( config ):
         fontsize = 10
     )
 
-    ax.set_title( _config[ 'title' ], fontsize = _config[ 'fontsize' ] )
+    ax.set_title(
+        f"{departPlanet[ 'name' ]} to {targetPlanet[ 'name' ]} Porkchop Plot",
+        fontsize = _config[ 'fontsize' ]
+    )
     ax.set_ylabel( 'Arrival (Days Past %s)' % _config[ 'arrival0' ], fontsize = _config[ 'fontsize' ] )
     ax.set_xlabel( 'Departure (Days Past %s)' % _config[ 'departure0' ], fontsize = _config[ 'fontsize' ] )
 
@@ -352,7 +375,10 @@ def interplanetary_porkchop( config ):
     plt.clabel( c1, fmt = '%.1f' )
     plt.clabel( c2, fmt = '%i' )
 
-    ax.set_title( r'$\Delta V$ Plot', fontsize = _config[ 'fontsize' ] )
+    ax.set_title(
+        rf"{departPlanet[ 'name' ]} to {targetPlanet[ 'name' ]}: Total $\Delta V \; \left(\dfrac{{km}}{{s}}\right)$ Plot",
+        fontsize = _config[ 'fontsize' ]
+        )
     ax.set_ylabel( 'Arrival (Days Past %s)' % _config[ 'arrival0' ], fontsize = _config[ 'fontsize' ] )
     ax.set_xlabel( 'Departure (Days Past %s)' % _config[ 'departure0' ], fontsize = _config[ 'fontsize' ] )
 
